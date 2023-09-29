@@ -1,0 +1,106 @@
+name:        "Postgres Acorn"
+description: "Acorn providing Postgres"
+readme:      "./README.md"
+icon:        "./images/icon.png"
+info: localData.info
+
+args: {
+  // Name of the default database
+  dbName: "postgres"
+
+  // Name of the default user
+  dbUser: ""
+}
+
+services: db: {
+	default:   true
+	container: "postgres"
+	secrets: ["username", "password"]
+	ports: "5432"
+	data: dbName: args.dbName
+}
+
+containers: {
+  postgres: {
+    name: "Postgres"
+    description: "Container running a Postgres server"
+    image: "postgres:15.3-alpine3.18"
+    ports: publish: "5432/tcp"
+    env: {
+      PGDATA: "/var/lib/postgresql/data/db"
+      POSTGRES_DB: args.dbName
+      POSTGRES_USER: "secret://username/token"
+      POSTGRES_PASSWORD: "secret://password/token"
+    }
+    dirs: {
+      "/var/lib/postgresql/data": "volume://db-data"
+    }
+    probes: [
+      {
+        type:                "liveness"
+        initialDelaySeconds: 10
+        exec: command: localData.livenessProbeCommand
+      },
+      {
+        type:                "readiness"
+        initialDelaySeconds: 5
+        exec: command: localData.readinessProbeCommand
+      },
+    ]
+  }
+}
+
+volumes: {
+  "db-data": {}
+}
+
+secrets: {
+    username: {
+        type: "token"
+        params: {
+            length: 16
+            characters: "abcdefghij1234567890"
+        }
+        data: token: ""
+    }
+    password: {
+        type: "token"
+        params: {
+            length: 16
+            characters: "abcdefghij1234567890"
+        }
+        data: token: ""
+    }
+}
+
+localData: readinessProbeCommand: [
+  "bash",
+  "-c",
+  "PGPASSWORD=\"${POSTGRES_PASSWORD}\" psql -U \"${POSTGRES_USER}\" -d \"${POSTGRES_DB}\" -c 'SELECT 1'"
+]
+
+localData: livenessProbeCommand: [
+  "bash",
+  "-c",
+  "PGPASSWORD=\"${POSTGRES_PASSWORD}\" pg_isready -U \"${POSTGRES_USER}\" -d \"${POSTGRES_DB}\""
+]
+
+localData: info: """
+	## Usage
+
+	services: db: {
+		external: "@{acorn.name}"
+	}
+
+	containers: app: {
+		image: "app-image"
+		env: {
+		  DB_HOST:       "@{@{service.}db.address}"
+		  DB_PORT:       "@{@{service.}db.port.5432}"
+		  DB_NAME:       "@{@{service.}db.data.dbName}"
+		  DB_ADMIN_USER: "@{@{service.}db.secrets.username.token}"
+		  DB_ADMIN_PASS: "@{@{service.}db.secrets.password.token}"
+		}
+	}
+	"""
+

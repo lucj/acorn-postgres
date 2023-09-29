@@ -1,0 +1,13 @@
+services: db: image: "ghcr.io/lucj/postgres:v#.#.#"
+
+containers: wordpress: {
+  image: "wordpress"
+  ports: publish: "80/http"
+	consumes: ["db"]
+	env: {
+    WORDPRESS_DB_HOST: "@{service.db.address}"
+    WORDPRESS_DB_USER: "@{service.db.secrets.admin.username}"
+    WORDPRESS_DB_PASSWORD: "@{service.db.secrets.admin.password}"
+    WORDPRESS_DB_NAME: "@{service.db.data.dbName}"
+	}
+}
