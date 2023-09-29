@@ -28,4 +28,6 @@ jobs:
       - name: Build and Publish Acorn image
         run: |
           TAG=${GITHUB_REF#refs/*/}
-          acorn build --platform linux/amd64 --push -t ghcr.io/lucj/acorn-postgres:$TAG .
+          USER=${{ github.repository_owner }}
+          REPO=${{ github.event.repository.name }}
+          acorn build --platform linux/amd64 --push -t ghcr.io/$USER/$REPO:$TAG .
