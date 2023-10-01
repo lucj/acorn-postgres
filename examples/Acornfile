@@ -1,4 +1,4 @@
-services: db: image: "ghcr.io/lucj/postgres:v#.#.#"
+services: db: image: "ghcr.io/lucj/acorn-postgres:v#.#.#"
 
 containers: wordpress: {
   image: "wordpress"
