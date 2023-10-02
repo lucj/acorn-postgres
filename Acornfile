@@ -1,9 +1,8 @@
 name:        "Postgres Acorn"
 description: "Acorn providing Postgres"
 readme:      "./README.md"
+info:        localData.info
 icon:        "./icon.png"
-
-info: localData.info
 
 args: {
   // Name of the default database
@@ -16,35 +15,9 @@ args: {
 services: db: {
 	default:   true
 	container: "postgres"
-	secrets: ["admin"]
-	ports: "5432"
+	secrets:   ["admin"]
+	ports:     "5432"
 	data: dbName: args.dbName
-}
-
-secrets: {
-  password: {
-    type: "token"
-    params: {
-        length: 16
-        characters: "abcdedfhifj01234567890"
-    }
-    data: token: ""
-  }
-}
-
-secrets: {
-  "admin": {
-    type: "generated"
-    params: job: "create-admin-secret"
-  }
-}
-
-jobs: "create-admin-secret": {
-  build: context: "."
-  env: {
-    DB_USER: args.dbUser
-    DB_PASS: "secret://password/token"
-  }
 }
 
 containers: {
@@ -52,7 +25,6 @@ containers: {
     name: "Postgres"
     description: "Container running a Postgres server"
     image: "postgres:15.3-alpine3.18"
-    ports: publish: "5432/tcp"
     env: {
       PGDATA: "/var/lib/postgresql/data/db"
       POSTGRES_DB: args.dbName
@@ -79,6 +51,32 @@ containers: {
 
 volumes: {
   "db-data": {}
+}
+
+jobs: "create-admin-secret": {
+  build: context: "."
+  env: {
+    DB_USER: args.dbUser
+    DB_PASS: "secret://password/token"
+  }
+}
+
+secrets: {
+  password: {
+    type: "token"
+    params: {
+        length: 16
+        characters: "abcdedfhifj01234567890"
+    }
+    data: token: ""
+  }
+}
+
+secrets: {
+  "admin": {
+    type: "generated"
+    params: job: "create-admin-secret"
+  }
 }
 
 localData: readinessProbeCommand: [
