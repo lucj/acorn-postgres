@@ -1,13 +1,13 @@
-services: db: image: "ghcr.io/lucj/acorn-postgres:v#.#.#"
+services: db: image: "ghcr.io/acorn-io/postgres:v#.#-#"
 
 containers: nextcloud: {
-  image: "nextcloud"
-  ports: publish: "80/http"
+	image: "nextcloud"
+	ports: publish: "80/http"
 	consumes: ["db"]
 	env: {
-    POSTGRES_HOST: "@{service.db.address}"
-    POSTGRES_DB: "@{service.db.data.dbName}"
-    POSTGRES_USER: "@{service.db.secrets.admin.username}"
-    POSTGRES_PASSWORD: "@{service.db.secrets.admin.password}"
+		POSTGRES_HOST:     "@{service.db.address}"
+		POSTGRES_DB:       "@{service.db.data.dbName}"
+		POSTGRES_USER:     "@{service.db.secrets.admin.username}"
+		POSTGRES_PASSWORD: "@{service.db.secrets.admin.password}"
 	}
 }
