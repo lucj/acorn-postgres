@@ -53,30 +53,19 @@ volumes: {
   "db-data": {}
 }
 
-jobs: "create-admin-secret": {
-  build: context: "."
-  env: {
-    DB_USER: args.dbUser
-    DB_PASS: "secret://password/token"
-  }
-}
-
 secrets: {
-  password: {
-    type: "token"
-    params: {
-        length: 16
-        characters: "abcdedfhifj01234567890"
+    admin: {
+        name: "credentials of the admin user"
+        type: "basic"
+        params: {
+            passwordLength: 10
+            passwordCharacters: "A-Za-z0-9"
+        }
+        data: {  
+            username: std.ifelse(args.dbUser != "", args.dbUser, "")
+            password: ""
+        }
     }
-    data: token: ""
-  }
-}
-
-secrets: {
-  "admin": {
-    type: "generated"
-    params: job: "create-admin-secret"
-  }
 }
 
 localData: readinessProbeCommand: [
@@ -95,7 +84,7 @@ localData: info: """
 	## Usage
 
 	services: db: {
-		external: "@{acorn.name}"
+		image: "ghcr.io/acorn-io/postgres:v#.#-#"
 	}
 
 	containers: app: {
