@@ -5,79 +5,79 @@ info:        localData.info
 icon:        "./icon.png"
 
 args: {
-  // Name of the default database
-  dbName: "postgres"
+	// Name of the default database
+	dbName: "postgres"
 
-  // Name of the default user
-  dbUser: "postgres"
+	// Name of the default user
+	dbUser: "postgres"
 }
 
 services: db: {
 	default:   true
 	container: "postgres"
-	secrets:   ["admin"]
-	ports:     "5432"
+	secrets: ["admin"]
+	ports: "5432"
 	data: dbName: args.dbName
 }
 
 containers: {
-  postgres: {
-    name: "Postgres"
-    description: "Container running a Postgres server"
-    image: "postgres:15.3-alpine3.18"
-    env: {
-      PGDATA: "/var/lib/postgresql/data/db"
-      POSTGRES_DB: args.dbName
-      POSTGRES_USER: "secret://admin/username"
-      POSTGRES_PASSWORD: "secret://admin/password"
-    }
-    dirs: {
-      "/var/lib/postgresql/data": "volume://db-data"
-    }
-    probes: [
-      {
-        type:                "liveness"
-        initialDelaySeconds: 10
-        exec: command: localData.livenessProbeCommand
-      },
-      {
-        type:                "readiness"
-        initialDelaySeconds: 5
-        exec: command: localData.readinessProbeCommand
-      },
-    ]
-  }
+	postgres: {
+		name:        "Postgres"
+		description: "Container running a Postgres server"
+		image:       "postgres:15.5-alpine3.18"
+		env: {
+			PGDATA:            "/var/lib/postgresql/data/db"
+			POSTGRES_DB:       args.dbName
+			POSTGRES_USER:     "secret://admin/username"
+			POSTGRES_PASSWORD: "secret://admin/password"
+		}
+		dirs: {
+			"/var/lib/postgresql/data": "volume://db-data"
+		}
+		probes: [
+			{
+				type:                "liveness"
+				initialDelaySeconds: 10
+				exec: command: localData.livenessProbeCommand
+			},
+			{
+				type:                "readiness"
+				initialDelaySeconds: 5
+				exec: command: localData.readinessProbeCommand
+			},
+		]
+	}
 }
 
 volumes: {
-  "db-data": {}
+	"db-data": {}
 }
 
 secrets: {
-    admin: {
-        name: "credentials of the admin user"
-        type: "basic"
-        params: {
-            passwordLength: 10
-            passwordCharacters: "A-Za-z0-9"
-        }
-        data: {  
-            username: std.ifelse(args.dbUser != "", args.dbUser, "")
-            password: ""
-        }
-    }
+	admin: {
+		name: "credentials of the admin user"
+		type: "basic"
+		params: {
+			passwordLength:     10
+			passwordCharacters: "A-Za-z0-9"
+		}
+		data: {
+			username: std.ifelse(args.dbUser != "", args.dbUser, "")
+			password: ""
+		}
+	}
 }
 
 localData: readinessProbeCommand: [
-  "bash",
-  "-c",
-  "PGPASSWORD=\"${POSTGRES_PASSWORD}\" psql -U \"${POSTGRES_USER}\" -d \"${POSTGRES_DB}\" -c 'SELECT 1'"
+	"bash",
+	"-c",
+	"PGPASSWORD=\"${POSTGRES_PASSWORD}\" psql -U \"${POSTGRES_USER}\" -d \"${POSTGRES_DB}\" -c 'SELECT 1'",
 ]
 
 localData: livenessProbeCommand: [
-  "bash",
-  "-c",
-  "PGPASSWORD=\"${POSTGRES_PASSWORD}\" pg_isready -U \"${POSTGRES_USER}\" -d \"${POSTGRES_DB}\""
+	"bash",
+	"-c",
+	"PGPASSWORD=\"${POSTGRES_PASSWORD}\" pg_isready -U \"${POSTGRES_USER}\" -d \"${POSTGRES_DB}\"",
 ]
 
 localData: info: """
@@ -98,4 +98,3 @@ localData: info: """
 		}
 	}
 	"""
-
